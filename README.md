@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🦞 Claw-Eval
+<img src="claw_eval.png" width="180" alt="Claw-Eval Logo">
+
+# Claw-Eval
 
 [![Tasks](https://img.shields.io/badge/tasks-104-blue)](#tasks)
 [![Models](https://img.shields.io/badge/models-22-green)](#leaderboard)
