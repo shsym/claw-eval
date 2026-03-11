@@ -16,9 +16,6 @@
 
 ## Roadmap
 
-- [ ] Skills
-- [ ] Image and video support
-- [ ] Memory consistency check
 - [ ] More real-world, multimodal tasks in complex productivity environments
 - [ ] Comprehensive, fine-grained scoring logic with deep state verification
 - [ ] Enhanced sandbox isolation and full-trace tracking for transparent, scalable evaluation
