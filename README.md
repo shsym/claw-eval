@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="claw_eval.png" width="180" alt="Claw-Eval Logo">
+<img src="claw_eval.png" width="160" alt="Claw-Eval Logo">
 
 # Claw-Eval
 
