@@ -101,6 +101,10 @@ class TraceEnd(BaseModel):
     tool_time_s: float = 0.0
     other_time_s: float = 0.0
     wall_time_s: float = 0.0
+    avg_ttft_ms: float | None = None
+    avg_decode_ms: float | None = None
+    avg_ms_per_token: float | None = None
+    total_content_tokens: int | None = None
     scores: DimensionScores = Field(default_factory=DimensionScores)
     task_score: float = 0.0
     passed: bool = False

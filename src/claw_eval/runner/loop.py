@@ -177,6 +177,10 @@ def run_task(
     wall_start = time.monotonic()
     model_time_s = 0.0
     tool_time_s = 0.0
+    ttft_values: list[float] = []
+    decode_values: list[float] = []
+    ms_per_token_values: list[float] = []
+    total_content_tokens = 0
 
     _log(f"[start] task={task.task_id} model={provider.model_id} trace={trace_path.name}")
     _log(f"[config] max_turns={task.environment.max_turns} timeout={task.environment.timeout_seconds}s sandbox_tools={sandbox_tools}")
@@ -230,6 +234,14 @@ def run_task(
                 model_time_s += time.monotonic() - model_t0
                 total_usage.input_tokens += usage.input_tokens
                 total_usage.output_tokens += usage.output_tokens
+                if usage.ttft_ms is not None:
+                    ttft_values.append(usage.ttft_ms)
+                if usage.decode_ms is not None:
+                    decode_values.append(usage.decode_ms)
+                if usage.ms_per_token is not None:
+                    ms_per_token_values.append(usage.ms_per_token)
+                if usage.content_tokens is not None:
+                    total_content_tokens += usage.content_tokens
                 turn_count += 1
 
                 # Log assistant message
@@ -313,6 +325,10 @@ def run_task(
             tool_time_s=round(tool_time_s, 2),
             other_time_s=round(other_time_s, 2),
             wall_time_s=round(wall_time, 2),
+            avg_ttft_ms=round(sum(ttft_values) / len(ttft_values), 2) if ttft_values else None,
+            avg_decode_ms=round(sum(decode_values) / len(decode_values), 2) if decode_values else None,
+            avg_ms_per_token=round(sum(ms_per_token_values) / len(ms_per_token_values), 2) if ms_per_token_values else None,
+            total_content_tokens=total_content_tokens if total_content_tokens > 0 else None,
             failure_modes=failure_modes,
         ))
 
@@ -321,10 +337,12 @@ def run_task(
         if loop_error:
             raise loop_exc
 
+    ttft_summary = f" ttft_avg={sum(ttft_values)/len(ttft_values):.1f}ms" if ttft_values else ""
     _log(
         f"[end] turns={turn_count} tokens={total_tok} "
         f"({input_tok}in/{output_tok}out) "
         f"time=model {model_time_s:.1f}s tool {tool_time_s:.1f}s wall {wall_time:.1f}s"
+        f"{ttft_summary}"
     )
 
     dispatcher.close()
