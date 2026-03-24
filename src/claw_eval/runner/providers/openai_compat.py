@@ -243,7 +243,9 @@ class OpenAICompatProvider:
         extra_body: dict | None = None,
     ) -> None:
         self.model_id = model_id
-        self.extra_body = extra_body or {}
+        extra = dict(extra_body or {})
+        self.force_stream = extra.pop("force_stream", False)
+        self.extra_body = extra
         resolved_key = api_key or os.environ.get("OPENAI_API_KEY") or "unused"
         self.client = OpenAI(
             api_key=resolved_key,
@@ -283,13 +285,13 @@ class OpenAICompatProvider:
 
         max_retries = 5
         last_exc: Exception | None = None
-        use_stream = False  # default: non-streaming
+        use_stream = bool(self.force_stream)  # force_stream=True enables TTFT capture
         for attempt in range(max_retries + 1):
             try:
-                if attempt <= 1:
-                    response = self._call_without_stream(kwargs)
-                else:
+                if use_stream or attempt > 1:
                     response = self._call_with_stream(kwargs)
+                else:
+                    response = self._call_without_stream(kwargs)
                 # Parse inside try so that empty-choices errors are retried
                 return self._parse_response(response)
             except Exception as exc:
