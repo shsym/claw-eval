@@ -356,6 +356,11 @@ class OpenAICompatProvider:
             stream_kwargs["stream_options"] = {"include_usage": True}
         stream = self.client.chat.completions.create(**kwargs, **stream_kwargs)
 
+        # Timing instrumentation
+        stream_start = time.monotonic()
+        first_content_ts: float | None = None
+        content_token_count = 0
+
         reasoning_parts: list[str] = []
         content_parts: list[str] = []
         tool_calls_by_index: dict[int, dict[str, Any]] = {}
@@ -378,7 +383,10 @@ class OpenAICompatProvider:
 
             # content
             if delta.content:
+                if first_content_ts is None:
+                    first_content_ts = time.monotonic()
                 content_parts.append(delta.content)
+                content_token_count += 1
 
             # tool_calls (streamed incrementally)
             if delta.tool_calls:
@@ -396,6 +404,16 @@ class OpenAICompatProvider:
 
         if not has_any_choice:
             raise RuntimeError("Model returned empty choices (choices=None or [])")
+
+        # Compute timing metrics
+        stream_end = time.monotonic()
+        ttft_ms = ((first_content_ts - stream_start) * 1000) if first_content_ts is not None else None
+        decode_ms = ((stream_end - first_content_ts) * 1000) if first_content_ts is not None else None
+        ms_per_token = (
+            round(decode_ms / content_token_count, 2)
+            if decode_ms is not None and content_token_count > 0
+            else None
+        )
 
         # Build a lightweight object that _parse_response can consume
         # (duck-typed to match openai ChatCompletion structure).
@@ -441,6 +459,14 @@ class OpenAICompatProvider:
         resp = _Resp()
         resp.choices = [choice]
         resp.usage = usage_info
+
+        # Attach timing data for _parse_response to pick up
+        resp._timing = {
+            "ttft_ms": round(ttft_ms, 2) if ttft_ms is not None else None,
+            "decode_ms": round(decode_ms, 2) if decode_ms is not None else None,
+            "content_tokens": content_token_count if content_token_count > 0 else None,
+            "ms_per_token": ms_per_token,
+        }
         return resp
 
     # ------------------------------------------------------------------
@@ -509,6 +535,14 @@ class OpenAICompatProvider:
                 input_tokens=response.usage.prompt_tokens,
                 output_tokens=response.usage.completion_tokens,
             )
+
+        # Pick up streaming timing data if present
+        timing = getattr(response, "_timing", None)
+        if timing:
+            usage.ttft_ms = timing.get("ttft_ms")
+            usage.decode_ms = timing.get("decode_ms")
+            usage.content_tokens = timing.get("content_tokens")
+            usage.ms_per_token = timing.get("ms_per_token")
 
         # Capture reasoning_content from thinking models (DeepSeek-R1, QwQ, etc.)
         # OpenRouter returns "reasoning" instead of "reasoning_content"
