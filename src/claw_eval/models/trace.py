@@ -17,6 +17,10 @@ def _now() -> str:
 class TokenUsage(BaseModel):
     input_tokens: int = 0
     output_tokens: int = 0
+    ttft_ms: float | None = None
+    decode_ms: float | None = None
+    content_tokens: int | None = None
+    ms_per_token: float | None = None
 
 
 class DimensionScores(BaseModel):
