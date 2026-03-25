@@ -204,6 +204,8 @@ class CRMDataExportGrader(AbstractGrader):
         audit_data: dict[str, dict] | None,
     ) -> float:
         """Use judge.evaluate() to assess report content quality."""
+        if judge is None:
+            return 0.0
         result = judge.evaluate(
             task_prompt,
             self.format_conversation(messages),

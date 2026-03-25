@@ -27,6 +27,8 @@ class MicronGMBeatGrader(AbstractGrader):
 
         has_search = 1.0 if any(d.tool_name in ("web_search", "web_fetch") for d in dispatches) else 0.0
 
+        if judge is None:
+            return scores
         judged = judge.evaluate(
             task.prompt.text,
             self.format_conversation(messages),

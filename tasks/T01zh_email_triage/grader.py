@@ -99,6 +99,9 @@ class EmailTriageGrader(AbstractGrader):
         The judge receives one batched request listing all 8 emails and the full
         response text, and returns a JSON dict mapping msg_id → assigned category.
         """
+        if judge is None:
+            return 0.0
+
         email_list = "\n".join(
             f'{i + 1}. {msg_id}: from {info["sender"]}, subject "{info["subject"]}"'
             for i, (msg_id, info) in enumerate(self.EXPECTED_CLASSIFICATIONS.items())

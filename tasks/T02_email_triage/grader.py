@@ -35,6 +35,9 @@ class EmailTriageGraderEN(_Base):
         English-variant override: same logic as the ZH parent but with an
         English prompt and English category labels.
         """
+        if judge is None:
+            return 0.0
+
         email_list = "\n".join(
             f'{i + 1}. {msg_id}: from {info["sender"]}, subject "{info["subject"]}"'
             for i, (msg_id, info) in enumerate(self.EXPECTED_CLASSIFICATIONS.items())

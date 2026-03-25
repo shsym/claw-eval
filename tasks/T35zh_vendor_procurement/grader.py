@@ -183,6 +183,8 @@ agent应该：
         actions: str,
         rubric: str,
     ) -> float:
+        if judge is None:
+            return 0.0
         result = judge.evaluate(task_prompt, conversation, actions, rubric)
         return result.score
 

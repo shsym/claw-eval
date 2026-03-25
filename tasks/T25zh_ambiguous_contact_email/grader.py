@@ -151,6 +151,8 @@ agent是否利用了邮件中的上下文线索进行推理：
         audit_data: dict[str, dict] | None,
     ) -> float:
         """Use judge.evaluate() to assess clarification request quality."""
+        if judge is None:
+            return 0.0
         result = judge.evaluate(
             task_prompt,
             self.format_conversation(messages),

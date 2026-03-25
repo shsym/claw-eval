@@ -43,6 +43,8 @@ class CVEResearchGrader(AbstractGrader):
         fetch_calls_count = len([d for d in dispatches if d.tool_name == "web_fetch"])
         search_depth = max(min((unique_searches + fetch_calls_count) / 6, 1.0), 0.2)
 
+        if judge is None:
+            return scores
         judged = judge.evaluate(
             task.prompt.text,
             self.format_conversation(messages),

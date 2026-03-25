@@ -88,6 +88,8 @@ class MeetingNotesGrader(AbstractGrader):
         self, judge: Any, task_prompt: str, conversation: str,
         actions: str, rubric: str,
     ) -> float:
+        if judge is None:
+            return 0.0
         result = judge.evaluate(task_prompt, conversation, actions, rubric)
         return result.score
 

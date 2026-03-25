@@ -181,6 +181,8 @@ VIP客户为：CUS-003 华信科技、CUS-004 博通信息。
         rubric: str,
     ) -> float:
         """Call LLM judge and return score."""
+        if judge is None:
+            return 0.0
         result = judge.evaluate(task_prompt, conversation, actions, rubric)
         return result.score
 

@@ -74,6 +74,8 @@ agent应从多篇文章中综合VPN问题排查的关键信息：
         self, judge: Any, task_prompt: str, conversation: str,
         actions: str, rubric: str,
     ) -> float:
+        if judge is None:
+            return 0.0
         result = judge.evaluate(task_prompt, conversation, actions, rubric)
         return result.score
 

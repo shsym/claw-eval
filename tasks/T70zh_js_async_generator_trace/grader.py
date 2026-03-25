@@ -49,6 +49,8 @@ class JsAsyncGeneratorTraceGrader(AbstractGrader):
         sandbox_calls = len([d for d in dispatches if d.tool_name == "sandbox_shell_exec"])
         tool_effort = min(sandbox_calls / 1, 1.0)
 
+        if judge is None:
+            return scores
         judged = judge.evaluate(
             task.prompt.text,
             self.format_conversation(messages),

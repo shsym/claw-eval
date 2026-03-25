@@ -47,6 +47,8 @@ class RestaurantMenuContactGrader(AbstractGrader):
         web_calls = len([d for d in dispatches if d.tool_name in ("web_search", "web_fetch")])
         tool_effort = 0.5 * min(ocr_calls, 1) + 0.5 * min(web_calls, 1)
 
+        if judge is None:
+            return scores
         judged = judge.evaluate(
             task.prompt.text,
             self.format_conversation(messages),
