@@ -3,6 +3,7 @@ task_name: Scheduled Task Management
 version: "1.0"
 category: ops
 difficulty: medium
+tags: [general]
 
 services:
   - name: scheduler
@@ -266,13 +267,14 @@ tool_endpoints:
     url: http://localhost:9100/gmail/drafts/save
     method: POST
 
+sandbox_files:
+  - fixtures/scheduler/jobs.json
+  - fixtures/kb/articles.json
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/scheduler/jobs.json
-    - fixtures/kb/articles.json
-    - fixtures/gmail/inbox.json
 
 scoring_components:
   - name: failed_job_identification

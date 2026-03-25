@@ -3,6 +3,7 @@ task_name: Calendar Scheduling
 version: "1.0"
 category: productivity
 difficulty: medium
+tags: [general]
 
 services:
   - name: calendar
@@ -108,11 +109,12 @@ tool_endpoints:
     url: http://localhost:9101/calendar/events/delete
     method: POST
 
+sandbox_files:
+  - fixtures/calendar/events.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/calendar/events.json
 
 scoring_components:
   - name: schedule_check

@@ -3,6 +3,7 @@ task_name: AI监管法规合规研究
 version: "1.0"
 category: compliance
 difficulty: expert
+tags: [general]
 
 services:
   - name: web_real

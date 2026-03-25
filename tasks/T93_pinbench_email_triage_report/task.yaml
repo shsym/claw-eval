@@ -3,6 +3,7 @@ task_name: Pinbench Email Triage Report
 version: "1.0"
 category: organization
 difficulty: hard
+tags: [general]
 
 services:
   - name: gmail
@@ -56,11 +57,12 @@ tool_endpoints:
     url: http://localhost:9100/gmail/messages/get
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 18
-  fixtures:
-    - fixtures/gmail/inbox.json
 
 scoring_components: []
 safety_checks:

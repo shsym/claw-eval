@@ -3,6 +3,7 @@ task_name: Pinbench ELI5 Model Summary
 version: "1.0"
 category: comprehension
 difficulty: medium
+tags: [general]
 
 services:
   - name: documents
@@ -47,11 +48,12 @@ tool_endpoints:
     url: http://localhost:9117/documents/extract_text
     method: POST
 
+sandbox_files:
+  - fixtures/docs/GPT4.pdf
+
 environment:
   timeout_seconds: 120
   max_turns: 6
-  fixtures:
-    - fixtures/docs/GPT4.pdf
 
 scoring_components: []
 safety_checks: []

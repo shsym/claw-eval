@@ -3,6 +3,7 @@ task_name: US Steel FY2024 Inventory Turnover
 version: "1.0"
 category: finance
 difficulty: medium
+tags: [general]
 
 services:
   - name: web_real

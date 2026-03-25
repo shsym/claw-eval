@@ -3,6 +3,7 @@ task_name: Video-MME Co-authored Papers Research
 version: "1.0"
 category: research
 difficulty: medium
+tags: [general]
 
 services:
   - name: web_real

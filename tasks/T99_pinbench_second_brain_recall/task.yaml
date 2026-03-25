@@ -3,6 +3,7 @@ task_name: Pinbench Second Brain Recall
 version: "1.0"
 category: memory
 difficulty: medium
+tags: [general]
 
 services:
   - name: notes
@@ -53,11 +54,12 @@ tool_endpoints:
     url: http://localhost:9105/notes/get
     method: POST
 
+sandbox_files:
+  - fixtures/notes/memory.json
+
 environment:
   timeout_seconds: 180
   max_turns: 8
-  fixtures:
-    - fixtures/notes/memory.json
 
 scoring_components: []
 safety_checks: []

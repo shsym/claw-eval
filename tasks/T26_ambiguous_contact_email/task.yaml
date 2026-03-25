@@ -3,6 +3,7 @@ task_name: Ambiguous Contact Email
 version: "1.0"
 category: communication
 difficulty: medium
+tags: [general]
 
 services:
   - name: contacts
@@ -133,12 +134,13 @@ tool_endpoints:
     url: http://localhost:9100/gmail/drafts/save
     method: POST
 
+sandbox_files:
+  - fixtures/contacts/contacts.json
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/contacts/contacts.json
-    - fixtures/gmail/inbox.json
 
 scoring_components:
   - name: email_reading

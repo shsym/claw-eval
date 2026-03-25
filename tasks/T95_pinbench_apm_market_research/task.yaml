@@ -3,6 +3,7 @@ task_name: Pinbench APM Market Research
 version: "1.0"
 category: research
 difficulty: hard
+tags: [general]
 
 services:
   - name: kb
@@ -54,11 +55,12 @@ tool_endpoints:
     url: http://localhost:9106/kb/articles/get
     method: POST
 
+sandbox_files:
+  - fixtures/kb/articles.json
+
 environment:
   timeout_seconds: 300
   max_turns: 16
-  fixtures:
-    - fixtures/kb/articles.json
 
 scoring_components: []
 safety_checks:

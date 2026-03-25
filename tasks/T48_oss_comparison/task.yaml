@@ -3,6 +3,7 @@ task_name: Open Source License Change Evaluation
 version: "1.0"
 category: ops
 difficulty: expert
+tags: [general]
 
 services:
   - name: web_real

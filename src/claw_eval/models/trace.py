@@ -104,6 +104,17 @@ class TraceEnd(BaseModel):
     timestamp: str = Field(default_factory=_now)
 
 
+class CompactEvent(BaseModel):
+    type: Literal["compact"] = "compact"
+    trace_id: str
+    layer: Literal["micro", "auto", "manual"]
+    estimated_tokens_before: int = 0
+    estimated_tokens_after: int = 0
+    messages_before: int = 0
+    messages_after: int = 0
+    timestamp: str = Field(default_factory=_now)
+
+
 class GradingResult(BaseModel):
     type: Literal["grading_result"] = "grading_result"
     trace_id: str
@@ -116,6 +127,6 @@ class GradingResult(BaseModel):
 
 
 TraceEvent = Annotated[
-    Union[TraceStart, TraceMessage, ToolDispatch, AuditSnapshot, MediaLoad, TraceEnd, GradingResult],
+    Union[TraceStart, TraceMessage, ToolDispatch, AuditSnapshot, MediaLoad, CompactEvent, TraceEnd, GradingResult],
     Field(discriminator="type"),
 ]

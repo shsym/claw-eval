@@ -3,6 +3,7 @@ task_name: Pinbench Daily Research Brief
 version: "1.0"
 category: synthesis
 difficulty: medium
+tags: [general]
 
 services:
   - name: rss
@@ -53,11 +54,12 @@ tool_endpoints:
     url: http://localhost:9109/rss/articles/get
     method: POST
 
+sandbox_files:
+  - tasks/T21zh_newsletter_curation/fixtures/rss/articles.json
+
 environment:
   timeout_seconds: 240
   max_turns: 12
-  fixtures:
-    - tasks/T21zh_newsletter_curation/fixtures/rss/articles.json
 
 scoring_components: []
 safety_checks: []

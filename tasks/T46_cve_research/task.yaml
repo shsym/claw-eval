@@ -3,6 +3,7 @@ task_name: CVE Security Vulnerability Research
 version: "1.0"
 category: security
 difficulty: expert
+tags: [general]
 
 services:
   - name: web_real

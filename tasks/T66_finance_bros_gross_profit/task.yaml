@@ -3,6 +3,7 @@ task_name: Dutch Bros 2026 Gross Profit Projection
 version: "1.0"
 category: finance
 difficulty: hard
+tags: [general]
 
 services:
   - name: web_real

@@ -14,9 +14,12 @@ import subprocess
 import time
 from pathlib import Path
 
-from ..models.content import TextBlock, ToolResultBlock, ToolUseBlock
+from ..models.content import ImageBlock, TextBlock, ToolResultBlock, ToolUseBlock
 from ..models.trace import ToolDispatch
 from .dispatcher import ToolDispatcher
+
+# Tools whose responses contain extractable image frames
+_MEDIA_TOOLS = frozenset({"sandbox_read_media", "sandbox_pdf2image", "sandbox_browser_screenshot"})
 
 
 class SandboxToolDispatcher:
@@ -31,15 +34,17 @@ class SandboxToolDispatcher:
         self._http = http_dispatcher
         self._sandbox_url = sandbox_url
         self._client = None  # lazy-init httpx client for remote mode
+        self._total_images_injected = 0
 
     # ---- public interface (same signature as ToolDispatcher) ---------------
 
     def dispatch(
         self, tool_use: ToolUseBlock, trace_id: str
-    ) -> tuple[ToolResultBlock, ToolDispatch]:
+    ) -> tuple[ToolResultBlock, ToolDispatch, list[ImageBlock] | None]:
         if tool_use.name.startswith("sandbox_"):
             return self._dispatch_sandbox(tool_use, trace_id)
-        return self._http.dispatch(tool_use, trace_id)
+        result, event = self._http.dispatch(tool_use, trace_id)
+        return result, event, None
 
     def close(self) -> None:
         if self._client is not None:
@@ -50,7 +55,7 @@ class SandboxToolDispatcher:
 
     def _dispatch_sandbox(
         self, tool_use: ToolUseBlock, trace_id: str
-    ) -> tuple[ToolResultBlock, ToolDispatch]:
+    ) -> tuple[ToolResultBlock, ToolDispatch, list[ImageBlock] | None]:
         if self._sandbox_url:
             return self._dispatch_remote(tool_use, trace_id)
         return self._dispatch_local(tool_use, trace_id)
@@ -62,17 +67,20 @@ class SandboxToolDispatcher:
         "sandbox_file_read": "/read",
         "sandbox_file_write": "/write",
         "sandbox_browser_screenshot": "/screenshot",
+        "sandbox_read_media": "/read_media",
+        "sandbox_pdf2image": "/pdf2image",
+        "sandbox_file_download": "/download",
     }
 
     def _get_client(self):
         if self._client is None:
             import httpx
-            self._client = httpx.Client(timeout=60.0)
+            self._client = httpx.Client(timeout=120.0)
         return self._client
 
     def _dispatch_remote(
         self, tool_use: ToolUseBlock, trace_id: str
-    ) -> tuple[ToolResultBlock, ToolDispatch]:
+    ) -> tuple[ToolResultBlock, ToolDispatch, list[ImageBlock] | None]:
         path = self._PATH_MAP.get(tool_use.name)
         if not path:
             return self._error_result(
@@ -97,9 +105,30 @@ class SandboxToolDispatcher:
                 endpoint_url=endpoint_url,
             )
 
+        # Extract images from media tool responses
+        extra_images: list[ImageBlock] | None = None
+        if tool_use.name in _MEDIA_TOOLS and not is_error:
+            extra_images = []
+            frames = body.get("frames", [])
+            for frame in frames:
+                if "image_b64" in frame:
+                    extra_images.append(ImageBlock(
+                        data=frame["image_b64"],
+                        mime_type=frame.get("mime_type", "image/jpeg"),
+                    ))
+                    self._total_images_injected += 1
+            # Strip base64 data from text summary to save tokens
+            summary_body = {k: v for k, v in body.items() if k != "frames"}
+            summary_body["frame_count"] = len(frames)
+            text_content = json.dumps(summary_body, ensure_ascii=False)
+            if not extra_images:
+                extra_images = None
+        else:
+            text_content = json.dumps(body, ensure_ascii=False)
+
         result = ToolResultBlock(
             tool_use_id=tool_use.id,
-            content=[TextBlock(text=json.dumps(body, ensure_ascii=False))],
+            content=[TextBlock(text=text_content)],
             is_error=is_error,
         )
         dispatch_event = ToolDispatch(
@@ -112,7 +141,7 @@ class SandboxToolDispatcher:
             response_body=body,
             latency_ms=latency_ms,
         )
-        return result, dispatch_event
+        return result, dispatch_event, extra_images
 
     # ---- local mode: subprocess/filesystem (backward compat) -------------
 
@@ -121,11 +150,14 @@ class SandboxToolDispatcher:
         "sandbox_file_read": "_handle_file_read",
         "sandbox_file_write": "_handle_file_write",
         "sandbox_browser_screenshot": "_handle_browser_screenshot",
+        "sandbox_read_media": "_handle_not_available",
+        "sandbox_pdf2image": "_handle_not_available",
+        "sandbox_file_download": "_handle_not_available",
     }
 
     def _dispatch_local(
         self, tool_use: ToolUseBlock, trace_id: str
-    ) -> tuple[ToolResultBlock, ToolDispatch]:
+    ) -> tuple[ToolResultBlock, ToolDispatch, list[ImageBlock] | None]:
         handler_name = self._LOCAL_HANDLERS.get(tool_use.name)
         if handler_name is None:
             return self._error_result(
@@ -162,7 +194,7 @@ class SandboxToolDispatcher:
                 status=500, latency_ms=latency_ms,
             )
 
-        return result, dispatch_event
+        return result, dispatch_event, None
 
     # ---- local handlers (unchanged from original) ------------------------
 
@@ -228,6 +260,14 @@ class SandboxToolDispatcher:
         except Exception as exc:
             return {"error": str(exc), "url": url}
 
+    # ---- local-only fallback for media tools ----------------------------
+
+    @staticmethod
+    def _handle_not_available(inp: dict) -> dict:
+        return {
+            "error": "This tool requires a remote sandbox container (--sandbox mode).",
+        }
+
     # ---- helpers ---------------------------------------------------------
 
     @staticmethod
@@ -239,7 +279,7 @@ class SandboxToolDispatcher:
         status: int = 500,
         latency_ms: float = 0.0,
         endpoint_url: str | None = None,
-    ) -> tuple[ToolResultBlock, ToolDispatch]:
+    ) -> tuple[ToolResultBlock, ToolDispatch, list[ImageBlock] | None]:
         result = ToolResultBlock(
             tool_use_id=tool_use.id,
             content=[TextBlock(text=f"Error: {error_msg}")],
@@ -255,4 +295,4 @@ class SandboxToolDispatcher:
             response_body={"error": error_msg},
             latency_ms=latency_ms,
         )
-        return result, dispatch_event
+        return result, dispatch_event, None

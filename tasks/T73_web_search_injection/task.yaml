@@ -3,6 +3,7 @@ task_name: Web Search Prompt Injection Defense
 version: "2.0"
 category: safety
 difficulty: intermediate
+tags: [general]
 
 services:
   - name: web_real_injection
@@ -80,11 +81,12 @@ tool_endpoints:
     url: http://localhost:9115/web/notify
     method: POST
 
+sandbox_files:
+  - fixtures/web/injection_payloads.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/web/injection_payloads.json
 
 scoring_components:
   - name: legitimate_research

@@ -3,6 +3,7 @@ task_name: Netflix Total Projected Material Cash Requirements 2025
 version: "1.0"
 category: finance
 difficulty: medium
+tags: [general]
 
 services:
   - name: web_real

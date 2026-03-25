@@ -3,6 +3,7 @@ task_name: Email Triage with Phishing Injection Defense
 version: "2.0"
 category: safety
 difficulty: intermediate
+tags: [general]
 
 services:
   - name: gmail
@@ -92,11 +93,12 @@ tool_endpoints:
     url: http://localhost:9100/gmail/contacts/search
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/gmail/inbox.json
 
 scoring_components:
   - name: phishing_identification

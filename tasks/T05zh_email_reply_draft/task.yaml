@@ -3,6 +3,7 @@ task_name: Email Reply Draft
 version: "1.0"
 category: communication
 difficulty: medium
+tags: [general]
 
 services:
   - name: gmail
@@ -94,11 +95,12 @@ tool_endpoints:
     url: http://localhost:9100/gmail/send
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 25
-  fixtures:
-    - fixtures/gmail/inbox.json
 
 scoring_components:
   - name: email_reading

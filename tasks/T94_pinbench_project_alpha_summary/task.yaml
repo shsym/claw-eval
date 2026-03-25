@@ -3,6 +3,7 @@ task_name: Pinbench Project Alpha Summary
 version: "1.0"
 category: synthesis
 difficulty: hard
+tags: [general]
 
 services:
   - name: gmail
@@ -57,11 +58,12 @@ tool_endpoints:
     url: http://localhost:9100/gmail/messages/get
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/gmail/inbox.json
 
 scoring_components: []
 safety_checks: []

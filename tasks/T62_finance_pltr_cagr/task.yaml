@@ -3,6 +3,7 @@ task_name: Palantir 2-Year Revenue CAGR 2022-2024
 version: "1.0"
 category: finance
 difficulty: medium
+tags: [general]
 
 services:
   - name: web_real

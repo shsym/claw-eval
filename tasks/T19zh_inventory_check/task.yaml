@@ -3,6 +3,7 @@ task_name: Inventory Check
 version: "1.0"
 category: operations
 difficulty: simple
+tags: [general]
 
 services:
   - name: inventory
@@ -66,11 +67,12 @@ tool_endpoints:
     url: http://localhost:9108/inventory/orders/create
     method: POST
 
+sandbox_files:
+  - fixtures/inventory/products.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/inventory/products.json
 
 scoring_components:
   - name: tool_usage

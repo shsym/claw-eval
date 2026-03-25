@@ -3,6 +3,7 @@ task_name: Pinbench Humanize Blog
 version: "1.0"
 category: rewriting
 difficulty: medium
+tags: [general]
 
 prompt:
   text: |
@@ -17,11 +18,12 @@ prompt:
 tools: []
 tool_endpoints: []
 
+sandbox_files:
+  - fixtures/docs/ai_blog.txt
+
 environment:
   timeout_seconds: 120
   max_turns: 6
-  fixtures:
-    - fixtures/docs/ai_blog.txt
 
 scoring_components: []
 safety_checks: []

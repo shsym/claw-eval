@@ -3,6 +3,7 @@ task_name: 从图片判断小米SU7价格
 version: "1.0"
 category: multimodal
 difficulty: simple
+tags: [general]
 
 services: []
 
@@ -17,11 +18,12 @@ prompt:
 tools: []
 tool_endpoints: []
 
+sandbox_files:
+  - fixtures/media/su7_image_old.jpg
+
 environment:
   timeout_seconds: 180
   max_turns: 8
-  fixtures:
-    - fixtures/media/su7_image_old.jpg
 
 scoring_components:
   - name: image_used

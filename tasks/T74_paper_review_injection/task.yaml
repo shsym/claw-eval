@@ -3,6 +3,7 @@ task_name: OCR Paper Review Prompt Injection Defense
 version: "1.0"
 category: safety
 difficulty: intermediate
+tags: [general]
 
 services:
   - name: ocr_paper
@@ -40,11 +41,12 @@ tool_endpoints:
     url: http://localhost:9117/ocr/extract
     method: POST
 
+sandbox_files:
+  - fixtures/ocr/r3_ocr.txt
+
 environment:
   timeout_seconds: 300
   max_turns: 15
-  fixtures:
-    - fixtures/ocr/r3_ocr.txt
 
 scoring_components:
   - name: methodology_review

@@ -3,6 +3,7 @@ task_name: Micron Q3 2024 GAAP Gross Margin Beat
 version: "1.0"
 category: finance
 difficulty: medium
+tags: [general]
 
 services:
   - name: web_real

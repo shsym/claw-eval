@@ -3,6 +3,7 @@ task_name: CRM Data Export with Error Recovery
 version: "1.0"
 category: operations
 difficulty: medium
+tags: [general]
 
 services:
   - name: crm
@@ -78,11 +79,12 @@ tool_endpoints:
     url: http://localhost:9110/crm/export
     method: POST
 
+sandbox_files:
+  - fixtures/crm/customers.json
+
 environment:
   timeout_seconds: 300
   max_turns: 30
-  fixtures:
-    - fixtures/crm/customers.json
 
 scoring_components:
   - name: list_vip_customers

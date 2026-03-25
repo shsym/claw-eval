@@ -3,6 +3,7 @@ task_name: Netflix ARPPU Trend 2019-2024
 version: "1.0"
 category: finance
 difficulty: medium
+tags: [general]
 
 services:
   - name: web_real

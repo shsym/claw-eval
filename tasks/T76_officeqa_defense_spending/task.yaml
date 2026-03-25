@@ -3,6 +3,7 @@ task_name: "OfficeQA: U.S. National Defense Expenditures (1940)"
 version: "1.0"
 category: office_qa
 difficulty: hard
+tags: [general]
 
 services:
   - name: ocr_t50
@@ -45,12 +46,13 @@ tool_endpoints:
     url: http://localhost:9120/ocr/extract
     method: POST
 
+sandbox_files:
+  - fixtures/ocr/treasury_bulletin_1941_01.txt
+  - fixtures/pdf/treasury_bulletin_1941_01.pdf
+
 environment:
   timeout_seconds: 300
   max_turns: 15
-  fixtures:
-    - fixtures/ocr/treasury_bulletin_1941_01.txt
-    - fixtures/pdf/treasury_bulletin_1941_01.pdf
 
 scoring_components:
   - name: numerical_accuracy

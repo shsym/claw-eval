@@ -3,6 +3,7 @@ task_name: Incident Postmortem — Root Cause Analysis
 version: "1.0"
 category: ops
 difficulty: expert
+tags: [general]
 
 services:
   - name: helpdesk
@@ -287,16 +288,17 @@ tool_endpoints:
     url: http://localhost:9112/scheduler/jobs/history
     method: POST
 
+sandbox_files:
+  - fixtures/helpdesk/tickets.json
+  - fixtures/config/integrations.json
+  - fixtures/gmail/inbox.json
+  - fixtures/kb/articles.json
+  - fixtures/notes/meetings.json
+  - fixtures/scheduler/jobs.json
+
 environment:
   timeout_seconds: 900
   max_turns: 40
-  fixtures:
-    - fixtures/helpdesk/tickets.json
-    - fixtures/config/integrations.json
-    - fixtures/gmail/inbox.json
-    - fixtures/kb/articles.json
-    - fixtures/notes/meetings.json
-    - fixtures/scheduler/jobs.json
 
 scoring_components:
   - name: root_cause_identification

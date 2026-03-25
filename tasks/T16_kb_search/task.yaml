@@ -3,6 +3,7 @@ task_name: Knowledge Base Search
 version: "1.0"
 category: knowledge
 difficulty: hard
+tags: [general]
 
 services:
   - name: kb
@@ -69,11 +70,12 @@ tool_endpoints:
     url: http://localhost:9106/kb/articles/update
     method: POST
 
+sandbox_files:
+  - fixtures/kb/articles.json
+
 environment:
   timeout_seconds: 300
   max_turns: 25
-  fixtures:
-    - fixtures/kb/articles.json
 
 expected_actions: []
 

@@ -3,6 +3,7 @@ task_name: Restaurant Menu Contact Info Extraction
 version: "1.0"
 category: multimodal
 difficulty: easy
+tags: [general]
 
 services:
   - name: ocr
@@ -77,12 +78,13 @@ tool_endpoints:
     url: http://localhost:9114/web/fetch
     method: POST
 
+sandbox_files:
+  - fixtures/media/menu.jpeg
+  - fixtures/ocr/menu_ocr.txt
+
 environment:
   timeout_seconds: 300
   max_turns: 15
-  fixtures:
-    - fixtures/media/menu.jpeg
-    - fixtures/ocr/menu_ocr.txt
 
 scoring_components:
   - name: phone_numbers

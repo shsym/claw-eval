@@ -3,6 +3,7 @@ task_name: JS异步生成器与微任务执行顺序追踪
 version: "1.0"
 category: coding
 difficulty: hard
+tags: [general]
 
 services: []
 

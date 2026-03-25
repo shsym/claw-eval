@@ -3,6 +3,7 @@ task_name: LLaMA W8A8量化CUDA Kernel致命Bug审查
 version: "1.0"
 category: coding
 difficulty: hard
+tags: [general]
 
 services:
   - name: web_real

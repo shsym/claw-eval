@@ -3,6 +3,7 @@ task_name: Onboarding Coordinator (English)
 version: "1.0"
 category: workflow
 difficulty: expert
+tags: [general]
 
 services:
   - name: gmail
@@ -373,16 +374,17 @@ tool_endpoints:
     url: http://localhost:9108/inventory/products/get
     method: POST
 
+sandbox_files:
+  - fixtures/contacts/contacts.json
+  - fixtures/gmail/inbox.json
+  - fixtures/calendar/events.json
+  - fixtures/todo/tasks.json
+  - fixtures/kb/articles.json
+  - fixtures/inventory/products.json
+
 environment:
   timeout_seconds: 900
   max_turns: 40
-  fixtures:
-    - fixtures/contacts/contacts.json
-    - fixtures/gmail/inbox.json
-    - fixtures/calendar/events.json
-    - fixtures/todo/tasks.json
-    - fixtures/kb/articles.json
-    - fixtures/inventory/products.json
 
 scoring_components:
   - name: draft_for_no_manager

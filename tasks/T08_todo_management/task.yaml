@@ -3,6 +3,7 @@ task_name: Todo Management
 version: "1.0"
 category: productivity
 difficulty: medium
+tags: [general]
 
 services:
   - name: todo
@@ -98,11 +99,12 @@ tool_endpoints:
     url: http://localhost:9102/todo/tasks/delete
     method: POST
 
+sandbox_files:
+  - fixtures/todo/tasks.json
+
 environment:
   timeout_seconds: 300
   max_turns: 25
-  fixtures:
-    - fixtures/todo/tasks.json
 
 scoring_components:
   - name: task_listing

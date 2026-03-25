@@ -3,6 +3,7 @@ task_name: Ticket Triage
 version: "1.0"
 category: operations
 difficulty: hard
+tags: [general]
 
 services:
   - name: helpdesk
@@ -88,11 +89,12 @@ tool_endpoints:
     url: http://localhost:9107/helpdesk/tickets/close
     method: POST
 
+sandbox_files:
+  - fixtures/helpdesk/tickets.json
+
 environment:
   timeout_seconds: 300
   max_turns: 30
-  fixtures:
-    - fixtures/helpdesk/tickets.json
 
 scoring_components:
   - name: ticket_reading
