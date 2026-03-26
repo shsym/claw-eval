@@ -7,6 +7,8 @@ import os
 import random
 import re
 import time
+import urllib.error
+import urllib.request
 from uuid import uuid4
 from typing import Any
 
@@ -134,6 +136,123 @@ def _extract_text_tool_calls(text: str) -> tuple[str, list[ToolUseBlock]]:
     return cleaned_text, tool_uses
 
 
+class _PiePromptCacheClient:
+    """Thin client for the inferlet's phase-1 prefix-cache endpoints."""
+
+    def __init__(self, base_url: str | None, config: dict[str, Any] | None) -> None:
+        self.enabled = bool(config and config.get("enabled", True) and base_url)
+        self.schema_id = (config or {}).get("schema_id", "claw-eval.system-message")
+        self.schema_version = (config or {}).get("schema_version", "1")
+        self.prompt_mode = (config or {}).get("prompt_mode", "default")
+        self.on_epoch_mismatch = (config or {}).get("on_epoch_mismatch", "render_full_request")
+        self.on_missing_prefix = (config or {}).get("on_missing_prefix", "render_full_request")
+        self.timeout_s = float((config or {}).get("timeout_s", 5.0))
+        self._base_url = (base_url or "").rstrip("/")
+        if self._base_url.endswith("/v1"):
+            self._base_url = self._base_url[:-3]
+        self._cache_epoch: str | None = None
+        self._handles_by_prefix: dict[str, str] = {}
+
+    def build_extra_body(self, messages: list[Message]) -> dict[str, Any] | None:
+        if not self.enabled:
+            return None
+
+        prefix_text = self._extract_prefix_text(messages)
+        if not prefix_text:
+            return None
+
+        caps = self._request_json("GET", "/v1/pie/prompt-cache/capabilities")
+        if not isinstance(caps, dict):
+            return None
+        features = caps.get("features") or {}
+        cache = caps.get("cache") or {}
+        if not features.get("registered_prefix_blocks"):
+            return None
+
+        epoch = cache.get("epoch")
+        if not isinstance(epoch, str) or not epoch:
+            return None
+        if epoch != self._cache_epoch:
+            self._cache_epoch = epoch
+            self._handles_by_prefix.clear()
+
+        prefix_handle = self._handles_by_prefix.get(prefix_text)
+        if prefix_handle is None:
+            ensured = self._request_json(
+                "POST",
+                "/v1/pie/prompt-cache/prefixes:ensure",
+                {
+                    "schema": {
+                        "schema_id": self.schema_id,
+                        "schema_version": self.schema_version,
+                    },
+                    "prefix": {
+                        "prompt_mode": self.prompt_mode,
+                        "slots": [
+                            {
+                                "placement": "system.base",
+                                "content": {"format": "text", "text": prefix_text},
+                            }
+                        ],
+                    },
+                    "fallback": {"on_prefix_miss": self.on_missing_prefix},
+                    "retention": {"scope": "instance", "priority": "warm"},
+                },
+            )
+            if not isinstance(ensured, dict):
+                return None
+            prefix_handle = ensured.get("prefix_handle")
+            cache = ensured.get("cache") or {}
+            if not isinstance(prefix_handle, str) or not prefix_handle:
+                return None
+            if isinstance(cache.get("epoch"), str) and cache["epoch"] != self._cache_epoch:
+                self._cache_epoch = cache["epoch"]
+                self._handles_by_prefix.clear()
+            self._handles_by_prefix[prefix_text] = prefix_handle
+
+        return {
+            "pie_prompt": {
+                "version": "1",
+                "mode": "registered_prefix",
+                "cache_epoch": self._cache_epoch,
+                "prefix_handle": prefix_handle,
+                "fallback": {
+                    "on_epoch_mismatch": self.on_epoch_mismatch,
+                    "on_missing_prefix": self.on_missing_prefix,
+                },
+            }
+        }
+
+    def _extract_prefix_text(self, messages: list[Message]) -> str | None:
+        if not messages:
+            return None
+        first = messages[0]
+        if first.role != "system":
+            return None
+        text = first.text.strip()
+        return text or None
+
+    def _request_json(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
+        url = f"{self._base_url}{path}"
+        data = None
+        headers = {"User-Agent": "claw-eval/1.0"}
+        if payload is not None:
+            data = json.dumps(payload).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
+                return json.loads(resp.read())
+        except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError):
+            return None
+
+
 def _blocks_to_openai_content(msg: Message) -> str | list[dict[str, Any]]:
     """Convert text/image/audio/video blocks into OpenAI content parts.
 
@@ -245,7 +364,9 @@ class OpenAICompatProvider:
         self.model_id = model_id
         extra = dict(extra_body or {})
         self.force_stream = extra.pop("force_stream", False)
+        prompt_cache_cfg = extra.pop("pie_prompt_cache", None)
         self.extra_body = extra
+        self.prompt_cache = _PiePromptCacheClient(base_url, prompt_cache_cfg)
         resolved_key = api_key or os.environ.get("OPENAI_API_KEY") or "unused"
         self.client = OpenAI(
             api_key=resolved_key,
@@ -278,8 +399,12 @@ class OpenAICompatProvider:
             "messages": oai_messages,
             "temperature": 0.0,
         }
-        if self.extra_body:
-            kwargs["extra_body"] = dict(self.extra_body)
+        extra_body = dict(self.extra_body)
+        prompt_cache_extra = self.prompt_cache.build_extra_body(messages)
+        if prompt_cache_extra:
+            extra_body.update(prompt_cache_extra)
+        if extra_body:
+            kwargs["extra_body"] = extra_body
         if tools:
             kwargs["tools"] = [_tool_spec_to_openai(t) for t in tools]
 
