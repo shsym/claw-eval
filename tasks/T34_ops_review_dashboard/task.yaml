@@ -3,6 +3,7 @@ task_name: Ops Review Dashboard — Cross-System Anomaly Correlation (English)
 version: "1.0"
 category: ops
 difficulty: expert
+tags: [general]
 
 services:
   - name: kb
@@ -274,16 +275,17 @@ tool_endpoints:
     url: http://localhost:9112/scheduler/jobs/history
     method: POST
 
+sandbox_files:
+  - fixtures/config/integrations.json
+  - fixtures/helpdesk/tickets.json
+  - fixtures/inventory/products.json
+  - fixtures/crm/customers.json
+  - fixtures/kb/articles.json
+  - fixtures/scheduler/jobs.json
+
 environment:
   timeout_seconds: 900
   max_turns: 40
-  fixtures:
-    - fixtures/config/integrations.json
-    - fixtures/helpdesk/tickets.json
-    - fixtures/inventory/products.json
-    - fixtures/crm/customers.json
-    - fixtures/kb/articles.json
-    - fixtures/scheduler/jobs.json
 
 scoring_components:
   - name: cross_system_correlation

@@ -3,6 +3,7 @@ task_name: TKO Endeavor Acquisition Cost
 version: "1.0"
 category: finance
 difficulty: easy
+tags: [general]
 
 services:
   - name: web_real

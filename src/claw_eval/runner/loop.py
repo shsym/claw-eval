@@ -8,11 +8,12 @@ from pathlib import Path
 from uuid import uuid4
 
 from ..config import MediaConfig, ModelConfig, PromptConfig
-from ..models.content import ContentBlock, TextBlock
+from ..models.content import ContentBlock, TextBlock, ToolResultBlock
 from ..models.message import Message
 from ..models.task import TaskDefinition
 from ..models.trace import (
     AuditSnapshot,
+    CompactEvent,
     DimensionScores,
     MediaLoad,
     TokenUsage,
@@ -21,10 +22,18 @@ from ..models.trace import (
     TraceStart,
 )
 from ..trace.writer import TraceWriter
+from .agent_tools import build_agent_tools
+from .compact import (
+    _estimate_tokens,
+    do_auto_compact,
+    micro_compact,
+    should_auto_compact,
+)
 from .dispatcher import ToolDispatcher
 from .media_loader import collect_media_references, load_media_from_ref, model_supports_modality, to_content_block
 from .providers.openai_compat import OpenAICompatProvider
 from .system_prompt import build_system_prompt
+from .todo import TodoManager
 
 
 def _log(msg: str) -> None:
@@ -36,6 +45,24 @@ def _brief(d: dict, max_len: int = 80) -> str:
     """Compact one-line summary of a dict for logging."""
     s = json.dumps(d, ensure_ascii=False)
     return s if len(s) <= max_len else s[:max_len] + "..."
+
+
+def _make_local_tool_result(tool_use, text: str, is_error: bool = False) -> ToolResultBlock:
+    """Create a ToolResultBlock for a locally dispatched agent tool."""
+    return ToolResultBlock(
+        tool_use_id=tool_use.id,
+        content=[TextBlock(text=text)],
+        is_error=is_error,
+    )
+
+
+def _inject_todo_reminder(messages: list[Message]) -> None:
+    """Append a gentle reminder to update the todo list as a user message."""
+    reminder = Message(
+        role="user",
+        content=[TextBlock(text="<reminder>You have an active todo list. Consider updating it.</reminder>")],
+    )
+    messages.append(reminder)
 
 
 def _build_initial_user_content(
@@ -172,6 +199,19 @@ def run_task(
         task_tools = task.tools
         dispatcher = http_dispatcher
 
+    # Build agent-level tools (todo, compact)
+    agent_tool_list = build_agent_tools(
+        enable_todo=task.environment.enable_todo,
+        enable_compact=task.environment.enable_compact,
+    )
+    task_tools = task_tools + agent_tool_list
+
+    # Initialise TodoManager and compact state
+    todo_mgr = TodoManager() if task.environment.enable_todo else None
+    rounds_since_todo = 0
+    auto_compact_count = 0
+    context_window = model_cfg.context_window if model_cfg else 200_000
+
     total_usage = TokenUsage()
     turn_count = 0
     wall_start = time.monotonic()
@@ -180,6 +220,8 @@ def run_task(
 
     _log(f"[start] task={task.task_id} model={provider.model_id} trace={trace_path.name}")
     _log(f"[config] max_turns={task.environment.max_turns} timeout={task.environment.timeout_seconds}s sandbox_tools={sandbox_tools}")
+    if agent_tool_list:
+        _log(f"[agent tools] {', '.join(t.name for t in agent_tool_list)}")
 
     with TraceWriter(trace_path) as writer:
         # Write trace start
@@ -223,6 +265,53 @@ def run_task(
                     _log(f"[timeout] {elapsed:.1f}s exceeded limit {task.environment.timeout_seconds}s")
                     break
 
+                # --- Layer 1: Micro-compact (truncate old tool results & strip old images) ---
+                if task.environment.enable_compact:
+                    micro_compact(
+                        messages,
+                        keep_recent=task.environment.compact_keep_recent,
+                        min_chars=task.environment.compact_min_chars,
+                    )
+
+                # --- Layer 2: Auto-compact (summarise when context is large) ---
+                if (
+                    task.environment.enable_compact
+                    and auto_compact_count < task.environment.compact_max_auto_compacts
+                    and should_auto_compact(messages, context_window, task.environment.compact_threshold_pct)
+                ):
+                    tokens_before = _estimate_tokens(messages)
+                    msgs_before = len(messages)
+                    _log(f"[auto-compact] triggering (est. {tokens_before} tokens, {msgs_before} msgs)")
+                    messages = do_auto_compact(
+                        messages,
+                        provider,
+                        keep_recent_on_summary=task.environment.compact_keep_recent_on_summary,
+                        protect_tokens=task.environment.compact_protect_tokens,
+                        todo_mgr=todo_mgr,
+                    )
+                    auto_compact_count += 1
+                    tokens_after = _estimate_tokens(messages)
+                    writer.write_event(CompactEvent(
+                        trace_id=trace_id,
+                        layer="auto",
+                        estimated_tokens_before=tokens_before,
+                        estimated_tokens_after=tokens_after,
+                        messages_before=msgs_before,
+                        messages_after=len(messages),
+                    ))
+                    _log(f"[auto-compact] done: {tokens_before} → {tokens_after} tokens, {msgs_before} → {len(messages)} msgs")
+
+                # --- Todo nag reminder ---
+                if (
+                    todo_mgr
+                    and todo_mgr.items
+                    and task.environment.todo_nag_rounds > 0
+                    and rounds_since_todo >= task.environment.todo_nag_rounds
+                ):
+                    _inject_todo_reminder(messages)
+                    rounds_since_todo = 0
+                    _log("[todo] injected nag reminder")
+
                 # Call model
                 _log(f"[turn {turn_count + 1}/{task.environment.max_turns}] calling model ...")
                 model_t0 = time.monotonic()
@@ -255,16 +344,70 @@ def run_task(
 
                 # Dispatch each tool call
                 result_blocks = []
+                media_blocks: list[ContentBlock] = []
+                has_non_agent_tool = False
                 for tu in tool_uses:
                     _log(f"  -> tool: {tu.name}({_brief(tu.input)})")
-                    result, dispatch_event = dispatcher.dispatch(tu, trace_id)
+
+                    # --- Local agent tool dispatch ---
+                    if tu.name == "todo" and todo_mgr:
+                        result_text = todo_mgr.update(tu.input.get("items", []))
+                        result = _make_local_tool_result(tu, result_text)
+                        result_blocks.append(result)
+                        rounds_since_todo = 0
+                        _log(f"  <- todo: OK (local)")
+                        continue
+
+                    if tu.name == "compact" and task.environment.enable_compact:
+                        tokens_before = _estimate_tokens(messages)
+                        msgs_before = len(messages)
+                        messages = do_auto_compact(
+                            messages,
+                            provider,
+                            keep_recent_on_summary=task.environment.compact_keep_recent_on_summary,
+                            protect_tokens=task.environment.compact_protect_tokens,
+                            todo_mgr=todo_mgr,
+                            focus=tu.input.get("focus"),
+                        )
+                        auto_compact_count += 1
+                        tokens_after = _estimate_tokens(messages)
+                        writer.write_event(CompactEvent(
+                            trace_id=trace_id,
+                            layer="manual",
+                            estimated_tokens_before=tokens_before,
+                            estimated_tokens_after=tokens_after,
+                            messages_before=msgs_before,
+                            messages_after=len(messages),
+                        ))
+                        result = _make_local_tool_result(
+                            tu, f"Context compacted. {tokens_before} → {tokens_after} est. tokens."
+                        )
+                        result_blocks.append(result)
+                        _log(f"  <- compact: OK (local, {tokens_before} → {tokens_after} tokens)")
+                        continue
+
+                    # --- Standard dispatcher (sandbox / HTTP) ---
+                    has_non_agent_tool = True
+                    dispatch_result = dispatcher.dispatch(tu, trace_id)
+                    # Support both 2-tuple (legacy) and 3-tuple (media-aware) dispatch
+                    if len(dispatch_result) == 3:
+                        result, dispatch_event, extra_media = dispatch_result
+                    else:
+                        result, dispatch_event = dispatch_result
+                        extra_media = None
                     writer.write_event(dispatch_event)
                     result_blocks.append(result)
+                    if extra_media:
+                        media_blocks.extend(extra_media)
                     tool_time_s += dispatch_event.latency_ms / 1000.0
                     status_tag = "OK" if not result.is_error else "ERR"
                     _log(f"  <- {tu.name}: {status_tag} ({dispatch_event.latency_ms:.0f}ms)")
 
-                # Add tool results as a user message (OpenAI convention)
+                # Track rounds since last todo update
+                if has_non_agent_tool:
+                    rounds_since_todo += 1
+
+                # Message 1: tool results (becomes role:tool in OpenAI format)
                 tool_msg = Message(role="user", content=result_blocks)
                 messages.append(tool_msg)
 
@@ -272,6 +415,18 @@ def run_task(
                     trace_id=trace_id,
                     message=tool_msg,
                 ))
+
+                # Message 2: visual content (role:user with images, only if there are images)
+                if media_blocks:
+                    from ..models.content import ImageBlock as _IB
+                    caption = TextBlock(text=f"[Visual content from tool results: {len(media_blocks)} image(s)]")
+                    media_msg = Message(role="user", content=[caption] + media_blocks)
+                    messages.append(media_msg)
+                    writer.write_event(TraceMessage(
+                        trace_id=trace_id,
+                        message=media_msg,
+                    ))
+                    _log(f"  [media] injected {len(media_blocks)} image(s) into conversation")
         except Exception as exc:
             loop_error = f"{type(exc).__name__}: {exc}"
             loop_exc = exc  # preserve original exception for re-raise

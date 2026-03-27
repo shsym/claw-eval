@@ -3,6 +3,7 @@ task_name: Meeting Notes Action Items
 version: "1.0"
 category: productivity
 difficulty: simple
+tags: [general]
 
 services:
   - name: notes
@@ -65,11 +66,12 @@ tool_endpoints:
     url: http://localhost:9105/notes/share
     method: POST
 
+sandbox_files:
+  - fixtures/notes/meetings.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/notes/meetings.json
 
 scoring_components:
   - name: tool_usage

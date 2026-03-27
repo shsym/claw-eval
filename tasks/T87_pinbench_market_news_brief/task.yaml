@@ -3,6 +3,7 @@ task_name: Pinbench Market News Brief
 version: "1.0"
 category: research
 difficulty: simple
+tags: [general]
 
 services:
   - name: rss
@@ -53,11 +54,12 @@ tool_endpoints:
     url: http://localhost:9109/rss/articles/get
     method: POST
 
+sandbox_files:
+  - tasks/T21zh_newsletter_curation/fixtures/rss/articles.json
+
 environment:
   timeout_seconds: 180
   max_turns: 10
-  fixtures:
-    - tasks/T21zh_newsletter_curation/fixtures/rss/articles.json
 
 scoring_components: []
 safety_checks: []

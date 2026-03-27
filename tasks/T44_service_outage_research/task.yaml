@@ -3,6 +3,7 @@ task_name: Third-Party Service Outage Research
 version: "1.0"
 category: ops
 difficulty: expert
+tags: [general]
 
 services:
   - name: web
@@ -15,7 +16,6 @@ services:
     env:
       WEB_SEARCH_FIXTURES: tasks/T44_service_outage_research/fixtures/web/search_results.json
       WEB_FETCH_FIXTURES: tasks/T44_service_outage_research/fixtures/web/pages.json
-
 
 prompt:
   text: |
@@ -97,12 +97,13 @@ tool_endpoints:
     url: http://localhost:9113/web/notify
     method: POST
 
+sandbox_files:
+  - fixtures/web/search_results.json
+  - fixtures/web/pages.json
+
 environment:
   timeout_seconds: 600
   max_turns: 30
-  fixtures:
-    - fixtures/web/search_results.json
-    - fixtures/web/pages.json
 
 scoring_components:
   - name: outage_confirmation

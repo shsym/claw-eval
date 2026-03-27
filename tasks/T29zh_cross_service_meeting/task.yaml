@@ -3,6 +3,7 @@ task_name: Cross-Service Meeting Coordination
 version: "1.0"
 category: workflow
 difficulty: hard
+tags: [general]
 
 services:
   - name: gmail
@@ -224,13 +225,14 @@ tool_endpoints:
     url: http://localhost:9101/calendar/events/delete
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+  - fixtures/contacts/contacts.json
+  - fixtures/calendar/events.json
+
 environment:
   timeout_seconds: 600
   max_turns: 30
-  fixtures:
-    - fixtures/gmail/inbox.json
-    - fixtures/contacts/contacts.json
-    - fixtures/calendar/events.json
 
 scoring_components:
   - name: email_reading

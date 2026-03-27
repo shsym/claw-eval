@@ -3,6 +3,7 @@ task_name: Binary Protocol Packet Decoder
 version: "2.0"
 category: terminal
 difficulty: hard
+tags: [general]
 
 services: []
 

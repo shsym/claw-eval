@@ -3,6 +3,7 @@ task_name: Newsletter Curation
 version: "1.0"
 category: content
 difficulty: hard
+tags: [general]
 
 services:
   - name: rss
@@ -88,11 +89,12 @@ tool_endpoints:
     url: http://localhost:9109/rss/publish
     method: POST
 
+sandbox_files:
+  - fixtures/rss/articles.json
+
 environment:
   timeout_seconds: 300
   max_turns: 30
-  fixtures:
-    - fixtures/rss/articles.json
 
 scoring_components:
   - name: article_browsing

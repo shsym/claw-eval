@@ -58,6 +58,18 @@ class Environment(BaseModel):
     timeout_seconds: int = 300
     max_turns: int = 20
     fixtures: list[str] = Field(default_factory=list)
+    env_snapshot_timeout: int = 10
+    # TodoWrite settings
+    enable_todo: bool = False
+    todo_nag_rounds: int = 3  # 0 = no reminder
+    # Context Compact settings
+    enable_compact: bool = False
+    compact_keep_recent: int = 3          # Layer 1: keep recent N turns intact
+    compact_min_chars: int = 500          # Layer 1: don't truncate short results
+    compact_threshold_pct: float = 0.70   # Layer 2: trigger at this % of context window
+    compact_keep_recent_on_summary: int = 4  # Layer 2: keep N messages after summary
+    compact_protect_tokens: int = 40_000  # Layer 2: protect recent token budget
+    compact_max_auto_compacts: int = 2    # Layer 2: max auto-compacts per task run
 
 
 class ServiceDef(BaseModel):
@@ -98,10 +110,12 @@ class TaskDefinition(BaseModel):
     judge_rubric: str = ""
     reference_solution: str = ""
     primary_dimensions: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     sandbox_files: list[str] = Field(default_factory=list)
     sandbox_grader_files: list[str] = Field(default_factory=list)
     env_snapshot_files: list[str] = Field(default_factory=list)
     env_snapshot_commands: list[str] = Field(default_factory=list)
+    local_grader_files: list[str] = Field(default_factory=list)
     task_file: str | None = Field(default=None, exclude=True)
 
     @classmethod

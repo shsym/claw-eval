@@ -3,6 +3,7 @@ task_name: SQLite WAL File Recovery
 version: "2.0"
 category: terminal
 difficulty: hard
+tags: [general]
 
 services: []
 

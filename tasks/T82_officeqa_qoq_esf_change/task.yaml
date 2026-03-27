@@ -3,6 +3,7 @@ task_name: "OfficeQA: QoQ Percent Change in ESF Assets (2022)"
 version: "1.0"
 category: office_qa
 difficulty: hard
+tags: [general]
 
 services:
   - name: ocr_t56
@@ -46,12 +47,13 @@ tool_endpoints:
     url: http://localhost:9126/ocr/extract
     method: POST
 
+sandbox_files:
+  - fixtures/ocr/treasury_bulletin_2022_12.txt
+  - fixtures/pdf/treasury_bulletin_2022_12.pdf
+
 environment:
   timeout_seconds: 300
   max_turns: 15
-  fixtures:
-    - fixtures/ocr/treasury_bulletin_2022_12.txt
-    - fixtures/pdf/treasury_bulletin_2022_12.pdf
 
 scoring_components:
   - name: numerical_accuracy

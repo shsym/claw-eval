@@ -3,6 +3,7 @@ task_name: Pinbench OpenClaw Facts
 version: "1.0"
 category: comprehension
 difficulty: medium
+tags: [general]
 
 services:
   - name: documents
@@ -51,11 +52,12 @@ tool_endpoints:
     url: http://localhost:9116/documents/extract_text
     method: POST
 
+sandbox_files:
+  - fixtures/docs/OpenClaw Agent Use Cases and Gap Analysis for PinchBench.pdf
+
 environment:
   timeout_seconds: 120
   max_turns: 4
-  fixtures:
-    - fixtures/docs/OpenClaw Agent Use Cases and Gap Analysis for PinchBench.pdf
 
 scoring_components: []
 safety_checks: []

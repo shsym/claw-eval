@@ -3,6 +3,7 @@ task_name: 开源软件许可证变更评估
 version: "1.0"
 category: ops
 difficulty: expert
+tags: [general]
 
 services:
   - name: web_real

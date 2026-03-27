@@ -4,13 +4,13 @@
 
 # Claw-Eval
 
-[![Tasks](https://img.shields.io/badge/tasks-104-blue)](#tasks)
+[![Tasks](https://img.shields.io/badge/tasks-139-blue)](#tasks)
 [![Models](https://img.shields.io/badge/models-23-green)](#leaderboard)
 [![Leaderboard](https://img.shields.io/badge/leaderboard-live-purple)](https://claw-eval.github.io)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 
 > End-to-end transparent benchmark for AI agents acts in the real world. <br>
-> 104 tasks, 15 services, Docker sandboxes, and robust grading.
+> 139 tasks, 15 services, Docker sandboxes, and robust grading.
 
 </div>
 

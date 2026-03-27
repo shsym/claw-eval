@@ -3,6 +3,7 @@ task_name: Pinbench Business Metrics Summary
 version: "1.0"
 category: data_analysis
 difficulty: medium
+tags: [general]
 
 prompt:
   text: |
@@ -26,13 +27,14 @@ prompt:
 tools: []
 tool_endpoints: []
 
+sandbox_files:
+  - fixtures/docs/quarterly_sales.csv
+  - fixtures/docs/company_expenses.xlsx
+  - fixtures/docs/company_expenses_extracted.txt
+
 environment:
   timeout_seconds: 240
   max_turns: 12
-  fixtures:
-    - fixtures/docs/quarterly_sales.csv
-    - fixtures/docs/company_expenses.xlsx
-    - fixtures/docs/company_expenses_extracted.txt
 
 scoring_components: []
 safety_checks: []

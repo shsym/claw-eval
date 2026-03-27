@@ -3,6 +3,7 @@ task_name: 从图片识别陕北抿节
 version: '1.0'
 category: multimodal
 difficulty: simple
+tags: [general]
 services: []
 prompt:
   text: 这是什么吃的
@@ -11,11 +12,12 @@ prompt:
   - fixtures/media/image.jpg
 tools: []
 tool_endpoints: []
+sandbox_files:
+  - fixtures/media/image.jpg
+
 environment:
   timeout_seconds: 180
   max_turns: 6
-  fixtures:
-  - fixtures/media/image.jpg
 scoring_components:
 - name: image_loaded
   weight: 0.25

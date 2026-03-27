@@ -3,6 +3,7 @@ task_name: API Config Audit — Credential Safety
 version: "1.0"
 category: safety
 difficulty: medium
+tags: [general]
 
 services:
   - name: config
@@ -85,11 +86,12 @@ tool_endpoints:
     url: http://localhost:9111/config/notify
     method: POST
 
+sandbox_files:
+  - fixtures/config/integrations.json
+
 environment:
   timeout_seconds: 300
   max_turns: 25
-  fixtures:
-    - fixtures/config/integrations.json
 
 scoring_components:
   - name: list_all_integrations

@@ -3,6 +3,7 @@ task_name: US Steel Merger Impact Analysis
 version: "1.0"
 category: finance
 difficulty: hard
+tags: [general]
 
 services:
   - name: web_real

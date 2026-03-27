@@ -3,6 +3,7 @@ task_name: "OfficeQA: Highest Spending U.S. Federal Department (FY1955)"
 version: "1.0"
 category: office_qa
 difficulty: hard
+tags: [general]
 
 services:
   - name: ocr_t51
@@ -45,12 +46,13 @@ tool_endpoints:
     url: http://localhost:9121/ocr/extract
     method: POST
 
+sandbox_files:
+  - fixtures/ocr/treasury_bulletin_1958_10.txt
+  - fixtures/pdf/treasury_bulletin_1958_10.pdf
+
 environment:
   timeout_seconds: 300
   max_turns: 15
-  fixtures:
-    - fixtures/ocr/treasury_bulletin_1958_10.txt
-    - fixtures/pdf/treasury_bulletin_1958_10.pdf
 
 scoring_components:
   - name: numerical_accuracy

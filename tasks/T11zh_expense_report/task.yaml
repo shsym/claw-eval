@@ -3,6 +3,7 @@ task_name: Expense Report
 version: "1.0"
 category: finance
 difficulty: medium
+tags: [general]
 
 services:
   - name: finance
@@ -70,11 +71,12 @@ tool_endpoints:
     url: http://localhost:9104/finance/report/submit
     method: POST
 
+sandbox_files:
+  - fixtures/finance/transactions.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/finance/transactions.json
 
 scoring_components:
   - name: data_retrieval

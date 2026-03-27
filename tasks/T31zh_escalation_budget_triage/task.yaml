@@ -3,6 +3,7 @@ task_name: Cross-Service Customer Escalation Triage with Budget Constraints
 version: "1.0"
 category: workflow
 difficulty: expert
+tags: [general]
 
 services:
   - name: gmail
@@ -285,15 +286,16 @@ tool_endpoints:
     url: http://localhost:9104/finance/transactions/get
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+  - fixtures/crm/customers.json
+  - fixtures/helpdesk/tickets.json
+  - fixtures/contacts/contacts.json
+  - fixtures/finance/transactions.json
+
 environment:
   timeout_seconds: 900
   max_turns: 40
-  fixtures:
-    - fixtures/gmail/inbox.json
-    - fixtures/crm/customers.json
-    - fixtures/helpdesk/tickets.json
-    - fixtures/contacts/contacts.json
-    - fixtures/finance/transactions.json
 
 scoring_components:
   - name: email_reading

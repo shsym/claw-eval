@@ -3,6 +3,7 @@ task_name: Pinbench Config Workflow Notes
 version: "1.0"
 category: workflow
 difficulty: medium
+tags: [general]
 
 services:
   - name: config
@@ -48,11 +49,12 @@ tool_endpoints:
     url: http://localhost:9111/config/integrations/get
     method: POST
 
+sandbox_files:
+  - tasks/T27zh_api_config_audit/fixtures/config/integrations.json
+
 environment:
   timeout_seconds: 180
   max_turns: 10
-  fixtures:
-    - tasks/T27zh_api_config_audit/fixtures/config/integrations.json
 
 scoring_components: []
 safety_checks:

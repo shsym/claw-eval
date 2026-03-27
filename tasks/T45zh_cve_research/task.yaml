@@ -3,6 +3,7 @@ task_name: CVE安全漏洞研究
 version: "1.0"
 category: security
 difficulty: expert
+tags: [general]
 
 services:
   - name: web_real

@@ -3,6 +3,7 @@ task_name: Email Triage
 version: "1.0"
 category: communication
 difficulty: simple
+tags: [general]
 
 services:
   - name: gmail
@@ -74,11 +75,12 @@ tool_endpoints:
     url: http://localhost:9100/gmail/send
     method: POST
 
+sandbox_files:
+  - fixtures/gmail/inbox.json
+
 environment:
   timeout_seconds: 300
   max_turns: 20
-  fixtures:
-    - fixtures/gmail/inbox.json
 
 expected_actions: []
 

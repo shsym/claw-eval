@@ -3,6 +3,7 @@ task_name: Pinbench Calendar Event Creation
 version: "1.0"
 category: productivity
 difficulty: simple
+tags: [general]
 
 services:
   - name: calendar
@@ -48,11 +49,12 @@ tool_endpoints:
     url: http://localhost:9101/calendar/events/create
     method: POST
 
+sandbox_files:
+  - fixtures/calendar/events.json
+
 environment:
   timeout_seconds: 120
   max_turns: 8
-  fixtures:
-    - fixtures/calendar/events.json
 
 scoring_components: []
 safety_checks: []

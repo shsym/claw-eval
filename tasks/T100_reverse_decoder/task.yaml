@@ -3,6 +3,7 @@ task_name: Reverse-Engineer Custom Encoder
 version: "2.0"
 category: terminal
 difficulty: hard
+tags: [general]
 
 services: []
 

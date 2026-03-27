@@ -3,6 +3,7 @@ task_name: Vendor Procurement Evaluation
 version: "1.0"
 category: procurement
 difficulty: expert
+tags: [general]
 
 services:
   - name: finance
@@ -241,15 +242,16 @@ tool_endpoints:
     url: http://localhost:9104/finance/report/submit
     method: POST
 
+sandbox_files:
+  - fixtures/inventory/products.json
+  - fixtures/rss/articles.json
+  - fixtures/crm/customers.json
+  - fixtures/kb/articles.json
+  - fixtures/finance/transactions.json
+
 environment:
   timeout_seconds: 900
   max_turns: 40
-  fixtures:
-    - fixtures/inventory/products.json
-    - fixtures/rss/articles.json
-    - fixtures/crm/customers.json
-    - fixtures/kb/articles.json
-    - fixtures/finance/transactions.json
 
 scoring_components:
   - name: conflict_identification

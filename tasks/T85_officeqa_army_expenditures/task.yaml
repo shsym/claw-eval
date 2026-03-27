@@ -3,6 +3,7 @@ task_name: "OfficeQA: Army Expenditures Cross-Document Comparison (Multi-Source)
 version: "1.0"
 category: office_qa
 difficulty: hard
+tags: [general]
 
 services:
   - name: ocr_t59
@@ -49,14 +50,15 @@ tool_endpoints:
     url: http://localhost:9129/ocr/extract
     method: POST
 
+sandbox_files:
+  - fixtures/ocr/treasury_bulletin_1948_04.txt
+  - fixtures/ocr/treasury_bulletin_1952_12.txt
+  - fixtures/pdf/treasury_bulletin_1948_04.pdf
+  - fixtures/pdf/treasury_bulletin_1952_12.pdf
+
 environment:
   timeout_seconds: 300
   max_turns: 15
-  fixtures:
-    - fixtures/ocr/treasury_bulletin_1948_04.txt
-    - fixtures/ocr/treasury_bulletin_1952_12.txt
-    - fixtures/pdf/treasury_bulletin_1948_04.pdf
-    - fixtures/pdf/treasury_bulletin_1952_12.pdf
 
 scoring_components:
   - name: numerical_accuracy

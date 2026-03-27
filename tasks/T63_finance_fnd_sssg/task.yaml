@@ -3,6 +3,7 @@ task_name: Floor & Decor Q4 2024 Same-Store Sales Growth
 version: "1.0"
 category: finance
 difficulty: easy
+tags: [general]
 
 services:
   - name: web_real
