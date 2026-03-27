@@ -146,6 +146,8 @@ class _PiePromptCacheClient:
         self.prompt_mode = (config or {}).get("prompt_mode", "default")
         self.on_epoch_mismatch = (config or {}).get("on_epoch_mismatch", "render_full_request")
         self.on_missing_prefix = (config or {}).get("on_missing_prefix", "render_full_request")
+        self.debug_compare = bool((config or {}).get("debug_compare", False))
+        self.debug_token_sample = (config or {}).get("debug_token_sample")
         self.timeout_s = float((config or {}).get("timeout_s", 5.0))
         self._base_url = (base_url or "").rstrip("/")
         if self._base_url.endswith("/v1"):
@@ -153,13 +155,25 @@ class _PiePromptCacheClient:
         self._cache_epoch: str | None = None
         self._handles_by_prefix: dict[str, str] = {}
 
-    def build_extra_body(self, messages: list[Message]) -> dict[str, Any] | None:
+    def build_extra_body(
+        self,
+        messages: list[Message],
+        tools: list[ToolSpec] | None,
+        extra_body: dict[str, Any],
+    ) -> dict[str, Any] | None:
         if not self.enabled:
             return None
 
         prefix_text = self._extract_prefix_text(messages)
         if not prefix_text:
             return None
+
+        render_context = self._build_render_context(tools, extra_body)
+        cache_key = json.dumps(
+            {"prefix_text": prefix_text, "render_context": render_context},
+            ensure_ascii=False,
+            sort_keys=True,
+        )
 
         caps = self._request_json("GET", "/v1/pie/prompt-cache/capabilities")
         if not isinstance(caps, dict):
@@ -176,7 +190,7 @@ class _PiePromptCacheClient:
             self._cache_epoch = epoch
             self._handles_by_prefix.clear()
 
-        prefix_handle = self._handles_by_prefix.get(prefix_text)
+        prefix_handle = self._handles_by_prefix.get(cache_key)
         if prefix_handle is None:
             ensured = self._request_json(
                 "POST",
@@ -195,6 +209,7 @@ class _PiePromptCacheClient:
                             }
                         ],
                     },
+                    "render_context": render_context,
                     "fallback": {"on_prefix_miss": self.on_missing_prefix},
                     "retention": {"scope": "instance", "priority": "warm"},
                 },
@@ -208,9 +223,9 @@ class _PiePromptCacheClient:
             if isinstance(cache.get("epoch"), str) and cache["epoch"] != self._cache_epoch:
                 self._cache_epoch = cache["epoch"]
                 self._handles_by_prefix.clear()
-            self._handles_by_prefix[prefix_text] = prefix_handle
+            self._handles_by_prefix[cache_key] = prefix_handle
 
-        return {
+        pie_prompt: dict[str, Any] = {
             "pie_prompt": {
                 "version": "1",
                 "mode": "registered_prefix",
@@ -222,6 +237,12 @@ class _PiePromptCacheClient:
                 },
             }
         }
+        if self.debug_compare:
+            debug_payload: dict[str, Any] = {"compare_full_state": True}
+            if self.debug_token_sample is not None:
+                debug_payload["token_sample"] = self.debug_token_sample
+            pie_prompt["pie_prompt"]["debug"] = debug_payload
+        return pie_prompt
 
     def _extract_prefix_text(self, messages: list[Message]) -> str | None:
         if not messages:
@@ -231,6 +252,22 @@ class _PiePromptCacheClient:
             return None
         text = first.text.strip()
         return text or None
+
+    def _build_render_context(
+        self,
+        tools: list[ToolSpec] | None,
+        extra_body: dict[str, Any],
+    ) -> dict[str, Any]:
+        render_context: dict[str, Any] = {}
+        if tools:
+            render_context["tools"] = [_tool_spec_to_openai(tool) for tool in tools]
+        chat_template_kwargs = extra_body.get("chat_template_kwargs")
+        if isinstance(chat_template_kwargs, dict) and chat_template_kwargs:
+            render_context["chat_template_kwargs"] = chat_template_kwargs
+        tool_choice = extra_body.get("tool_choice")
+        if tool_choice is not None:
+            render_context["tool_choice"] = tool_choice
+        return render_context
 
     def _request_json(
         self,
@@ -400,7 +437,7 @@ class OpenAICompatProvider:
             "temperature": 0.0,
         }
         extra_body = dict(self.extra_body)
-        prompt_cache_extra = self.prompt_cache.build_extra_body(messages)
+        prompt_cache_extra = self.prompt_cache.build_extra_body(messages, tools, extra_body)
         if prompt_cache_extra:
             extra_body.update(prompt_cache_extra)
         if extra_body:
